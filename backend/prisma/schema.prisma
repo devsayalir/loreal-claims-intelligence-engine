@@ -1,0 +1,74 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ClaimType {
+  EFFICACY
+  SENSORY
+  CONSUMER_PERCEPTION
+  SAFETY
+}
+
+enum ClaimStatus {
+  PROPOSED
+  APPROVED
+  REJECTED
+  FORMULA_SUBMITTED
+  EVIDENCE_ATTACHED
+  ASSESSED
+}
+
+model Claim {
+  id          String      @id @default(uuid())
+  productName String
+  claimText   String
+  claimType   ClaimType   @default(EFFICACY)
+  status      ClaimStatus @default(PROPOSED)
+  proposedBy  String?
+
+  reviewNote String?
+
+  formulaReference String?
+  formulaDetails   String?
+
+  studyDesign   String?
+  sampleSize    Int?
+  studyDuration String?
+  evidenceText  String?
+
+  assessments Assessment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+model Assessment {
+  id      String @id @default(uuid())
+  claimId String
+  claim   Claim  @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  justified       Boolean
+  confidenceScore Int
+  reasoning       String
+
+  // Snapshot of what was sent, since the claim's evidence can be edited later.
+  evidenceSnapshot String
+
+  provider      String
+  model         String
+  promptVersion String
+  rawResponse   Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([claimId, createdAt])
+}
