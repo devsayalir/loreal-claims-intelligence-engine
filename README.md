@@ -21,18 +21,18 @@ It also covers the full business flow: the business team proposes a claim, the c
 
 ## Prerequisites
 
-| Tool | Version | Needed for |
-| --- | --- | --- |
-| [Git](https://git-scm.com/) | any | cloning |
-| [Docker](https://docs.docker.com/get-docker/) (Docker Desktop on Windows/macOS) | with Compose v2 | both options |
-| [Node.js](https://nodejs.org/) | 22.12 or later (tested on 24) | development option only |
+| Tool                                                                            | Version                       | Needed for              |
+| ------------------------------------------------------------------------------- | ----------------------------- | ----------------------- |
+| [Git](https://git-scm.com/)                                                     | any                           | cloning                 |
+| [Docker](https://docs.docker.com/get-docker/) (Docker Desktop on Windows/macOS) | with Compose v2               | both options            |
+| [Node.js](https://nodejs.org/)                                                  | 22.12 or later (tested on 24) | development option only |
 
 An OpenAI API key is optional. Without one, the app uses a built-in offline reviewer.
 
 Ports used: `8080` (Docker web), `3000` (API), `5173` (Vite dev server), `5433` (PostgreSQL). If one is taken, change it in `docker-compose.yml` or `.env`.
 
 ```bash
-git clone https://github.com/<your-user>/loreal-claims-intelligence-engine.git
+git clone https://github.com/devsayalir/loreal-claims-intelligence-engine.git
 cd loreal-claims-intelligence-engine
 ```
 
@@ -46,20 +46,20 @@ docker compose up -d --build
 
 Open http://localhost:8080. The first build takes a few minutes.
 
-| Task | Command |
-| --- | --- |
-| Logs | `docker compose logs -f api` |
-| Stop | `docker compose stop` |
-| Remove containers and data | `docker compose down -v` |
+| Task                       | Command                      |
+| -------------------------- | ---------------------------- |
+| Logs                       | `docker compose logs -f api` |
+| Stop                       | `docker compose stop`        |
+| Remove containers and data | `docker compose down -v`     |
 
 Compose starts four services:
 
-| Service | What it does |
-| --- | --- |
-| `db` | PostgreSQL 16 |
+| Service   | What it does                                                                     |
+| --------- | -------------------------------------------------------------------------------- |
+| `db`      | PostgreSQL 16                                                                    |
 | `migrate` | One-off job that applies migrations and loads demo data if the database is empty |
-| `api` | NestJS on Node 24, started only after `migrate` succeeds |
-| `web` | The React build served by nginx, which also proxies `/api` to the API |
+| `api`     | NestJS on Node 24, started only after `migrate` succeeds                         |
+| `web`     | The React build served by nginx, which also proxies `/api` to the API            |
 
 ## Option 2: Run for development (hot reload)
 
@@ -109,12 +109,12 @@ To browse the database, run `docker exec -it claims-db psql -U claims -d claims`
 
 Set these in `backend/.env` for development, or in the root `.env` for Docker. Restart the API after changing them.
 
-| Setting | Behaviour |
-| --- | --- |
-| `LLM_PROVIDER=openai` and `OPENAI_API_KEY` set | Uses OpenAI (`OPENAI_MODEL`, default `gpt-4o-mini`) |
-| `OPENAI_API_KEY` empty | Falls back to the built-in rule-based reviewer, and the UI shows a banner |
-| `LLM_PROVIDER=mock` | Always uses the rule-based reviewer |
-| `LOG_LLM_PAYLOADS=true` | Logs full prompts and model responses (development only) |
+| Setting                                        | Behaviour                                                                 |
+| ---------------------------------------------- | ------------------------------------------------------------------------- |
+| `LLM_PROVIDER=openai` and `OPENAI_API_KEY` set | Uses OpenAI (`OPENAI_MODEL`, default `gpt-4o-mini`)                       |
+| `OPENAI_API_KEY` empty                         | Falls back to the built-in rule-based reviewer, and the UI shows a banner |
+| `LLM_PROVIDER=mock`                            | Always uses the rule-based reviewer                                       |
+| `LOG_LLM_PAYLOADS=true`                        | Logs full prompts and model responses (development only)                  |
 
 `GET /api/health` shows which provider is active. If OpenAI returns an error (for example `429 insufficient_quota` when the account has no credits), the API responds with `502` and the reason is in the API log.
 
@@ -131,25 +131,25 @@ To test the assessment directly, switch to **Evaluator**, open **Quick assess** 
 
 The seed data includes one claim at each of the main stages.
 
-| Claims list | Quick assess | Waiting on another role |
-| --- | --- | --- |
+| Claims list                                      | Quick assess                                       | Waiting on another role                                       |
+| ------------------------------------------------ | -------------------------------------------------- | ------------------------------------------------------------- |
 | ![Claims list](docs/screenshots/claims-list.png) | ![Quick assess](docs/screenshots/quick-assess.png) | ![Waiting on another role](docs/screenshots/role-waiting.png) |
 
 ## API
 
 All endpoints are under `/api`. Write endpoints need an `X-User-Role` header.
 
-| Method | Path | Role | Description |
-| --- | --- | --- | --- |
-| POST | `/claims` | BUSINESS | Propose a claim |
-| GET | `/claims` | any | List claims (`?status=` filter) |
-| GET | `/claims/:id` | any | Claim with its assessments |
-| PATCH | `/claims/:id/review` | CLAIM_MANAGER | `{ decision: APPROVE or REJECT, note }` |
-| PATCH | `/claims/:id/formula` | SCIENTIST | `{ formulaReference, formulaDetails }` |
-| PATCH | `/claims/:id/evidence` | EVALUATOR | `{ studyDesign, sampleSize, studyDuration, evidenceText }` |
-| POST | `/claims/assess` | EVALUATOR | Assess a claim (see below) |
-| GET | `/claims/:id/assessments` | any | Assessment history |
-| GET | `/health` | any | Status and active LLM provider |
+| Method | Path                      | Role          | Description                                                |
+| ------ | ------------------------- | ------------- | ---------------------------------------------------------- |
+| POST   | `/claims`                 | BUSINESS      | Propose a claim                                            |
+| GET    | `/claims`                 | any           | List claims (`?status=` filter)                            |
+| GET    | `/claims/:id`             | any           | Claim with its assessments                                 |
+| PATCH  | `/claims/:id/review`      | CLAIM_MANAGER | `{ decision: APPROVE or REJECT, note }`                    |
+| PATCH  | `/claims/:id/formula`     | SCIENTIST     | `{ formulaReference, formulaDetails }`                     |
+| PATCH  | `/claims/:id/evidence`    | EVALUATOR     | `{ studyDesign, sampleSize, studyDuration, evidenceText }` |
+| POST   | `/claims/assess`          | EVALUATOR     | Assess a claim (see below)                                 |
+| GET    | `/claims/:id/assessments` | any           | Assessment history                                         |
+| GET    | `/health`                 | any           | Status and active LLM provider                             |
 
 `POST /api/claims/assess` accepts either a stored claim:
 
@@ -193,13 +193,13 @@ Response (`201`):
 
 Error responses:
 
-| Status | When |
-| --- | --- |
-| 400 | Invalid body |
-| 403 | Wrong role |
-| 404 | Unknown claim |
-| 409 | The claim is not at a stage where it can be assessed |
-| 502 | The model failed or returned an invalid answer. Nothing is saved. |
+| Status | When                                                              |
+| ------ | ----------------------------------------------------------------- |
+| 400    | Invalid body                                                      |
+| 403    | Wrong role                                                        |
+| 404    | Unknown claim                                                     |
+| 409    | The claim is not at a stage where it can be assessed              |
+| 502    | The model failed or returned an invalid answer. Nothing is saved. |
 
 ## Project layout
 
